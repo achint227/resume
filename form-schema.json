@@ -1,0 +1,197 @@
+{
+    "title": "Edit your resume",
+    "type": "object",
+    "required": [
+        "title"
+    ],
+    "properties": {
+        "basic_info": {
+            "title": "Basic Information",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "title": "Name",
+                    "type": "string"
+                },
+                "address": {
+                    "title": "Address",
+                    "type": "string"
+                },
+                "email": {
+                    "title": "Email",
+                    "type": "string",
+                    "format": "email"
+                },
+                "phone": {
+                    "title": "Phone",
+                    "type": "string"
+                },
+                "linkedin": {
+                    "title": "LinkedIn",
+                    "type": "string"
+                },
+                "github": {
+                    "title": "GitHub",
+                    "type": "string"
+                },
+                "homepage": {
+                    "title": "Homepage",
+                    "type": "string"
+                },
+                "summary": {
+                    "title": "Summary",
+                    "type": "string",
+                    "format": "textarea"
+                }
+            },
+            "required": [
+                "name",
+                "address",
+                "email",
+                "phone",
+                "linkedin",
+                "github"
+            ]
+        },
+        "education": {
+            "type": "array",
+            "title": "Education",
+            "items": {
+                "title": "",
+                "type": "object",
+                "properties": {
+                    "university": {
+                        "title": "University",
+                        "type": "string"
+                    },
+                    "duration": {
+                        "title": "Duration",
+                        "type": "string"
+                    },
+                    "location": {
+                        "title": "Location",
+                        "type": "string"
+                    },
+                    "degree": {
+                        "title": "Degree",
+                        "type": "string"
+                    },
+                    "info": {
+                        "type": "array",
+                        "title": "Additional Information",
+                        "items": {
+                            "title": " ",
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "university",
+                    "degree"
+                ]
+            }
+        },
+        "projects": {
+            "title": "Academic Projects",
+            "type": "array",
+            "items": {
+                "title": "",
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "title": "Project Title",
+                        "type": "string"
+                    },
+                    "repo": {
+                        "type": "string",
+                        "title": "GitHub Repository"
+                    },
+                    "description": {
+                        "title": "Information",
+                        "type": "array",
+                        "items": {
+                            "title": " ",
+                            "type": "string",
+                            "format": "textarea"
+                        }
+                    },
+                    "tools": {
+                        "title": "Tools",
+                        "type": "array",
+                        "items": {
+                            "title": " ",
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "title"
+                ]
+            }
+        },
+        "experience": {
+            "type": "array",
+            "title": "Experience",
+            "items": {
+                "required": [
+                    "company",
+                    "title"
+                ],
+                "title": " ",
+                "type": "object",
+                "properties": {
+                    "company": {
+                        "title": "Company",
+                        "type": "string"
+                    },
+                    "duration": {
+                        "title": "Duration",
+                        "type": "string"
+                    },
+                    "location": {
+                        "title": "Location",
+                        "type": "string"
+                    },
+                    "title": {
+                        "title": "Title",
+                        "type": "string"
+                    },
+                    "projects": {
+                        "title": "Projects",
+                        "type": "array",
+                        "items": {
+                            "title": "",
+                            "type": "object",
+                            "properties": {
+                                "title": {
+                                    "title": "Project Title",
+                                    "type": "string"
+                                },
+                                "details": {
+                                    "title": "Information",
+                                    "type": "array",
+                                    "items": {
+                                        "title": " ",
+                                        "type": "string",
+                                        "format": "textarea"
+                                    }
+                                },
+                                "tools": {
+                                    "title": "Tools",
+                                    "type": "array",
+                                    "items": {
+                                        "title": " ",
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "required": [
+                                "title"
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
