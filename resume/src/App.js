@@ -1,6 +1,9 @@
 import React from 'react';
-import Form from 'react-jsonschema-form';
+import validator from "@rjsf/validator-ajv8";
+import Form from "@rjsf/core";
+
 import formSchema from './form-schema.json';
+
 
 function MyForm() {
   function handleSubmit(formData) {
@@ -8,10 +11,11 @@ function MyForm() {
   }
 
   return (
-    <Form
-      schema={formSchema}
+    <Form schema={formSchema}
+      validator={validator}
       onSubmit={handleSubmit}
     />
+
   );
 }
 
