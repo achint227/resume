@@ -1,10 +1,12 @@
 {
     "title": "Edit your resume",
     "type": "object",
-    "required": [
-        "title"
-    ],
+    "required": [],
     "properties": {
+        "name": {
+            "title": "Resume Name",
+            "type": "string"
+        },
         "basic_info": {
             "title": "Basic Information",
             "type": "object",
@@ -24,7 +26,7 @@
                 },
                 "phone": {
                     "title": "Phone",
-                    "type": "string"
+                    "type": "integer"
                 },
                 "linkedin": {
                     "title": "LinkedIn",
@@ -129,7 +131,7 @@
                 ]
             }
         },
-        "experience": {
+        "experiences": {
             "type": "array",
             "title": "Experience",
             "items": {
