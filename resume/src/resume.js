@@ -7,6 +7,11 @@ export async function getAllResumes() {
     return data;
 }
 
+export async function downloadResume(id){
+    const url = `${BASE_URL}/download/${id}`;
+    return fetch(url)
+}
+
 export async function createResume(resumeData) {
     console.log(resumeData)
     const url = `${BASE_URL}/resume`;
