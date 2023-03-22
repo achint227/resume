@@ -19,7 +19,45 @@ async function fetchResumes() {
 }
 
 
+const uiSchema = {
+  basic_info: {
+    summary: {
+      "ui:widget": "textarea",
+      "ui:options": {
+        rows: 7
+      }
+    }
+  },
+  projects: {
+    items: {
+      description: {
+        items: {
+          "ui:widget": "textarea",
+          "ui:options": {
+            rows: 5
+          }
+        }
+      }
+    }
+  },
+  experiences: {
+    items: {
+      projects: {
+        items: {
+          details: {
+            items: {
+              "ui:widget": "textarea",
+              "ui:options": {
+                rows: 10
+              }
+            }
+          }
+        }
+      }
 
+    }
+  }
+};
 
 
 
@@ -85,6 +123,7 @@ function MyForm() {
         validator={validator}
         onSubmit={handleSubmit}
         formData={getResumeById(selectedResumeId)}
+        uiSchema={uiSchema}
       />
       {formSubmitted ? (
         <div>
