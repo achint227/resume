@@ -7,6 +7,14 @@
             "title": "Resume Name",
             "type": "string"
         },
+        "keywords": {
+            "title": "Keywords",
+            "type": "array",
+            "items": {
+                "title": " ",
+                "type": "string"
+            }
+        },
         "basic_info": {
             "title": "Basic Information",
             "type": "object",
