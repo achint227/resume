@@ -7,8 +7,9 @@ export async function getAllResumes() {
     return data;
 }
 
-export async function downloadResume(id){
-    const url = `${BASE_URL}/download/${id}`;
+export async function downloadResume(id, template){
+    console.log(id,template)
+    const url = `${BASE_URL}/download/${id}/${template}`;
     return fetch(url)
 }
 
