@@ -126,7 +126,7 @@ function MyForm() {
         <option value="">Select a resume</option>
         {resumes.map((resume) => (
           <option key={resume._id} value={resume._id}>
-            {resume._id}
+            {`${resume.name} - ${resume._id}`}
           </option>
         ))}
       </select>
