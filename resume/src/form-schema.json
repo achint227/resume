@@ -9,11 +9,8 @@
         },
         "keywords": {
             "title": "Keywords",
-            "type": "array",
-            "items": {
-                "title": " ",
-                "type": "string"
-            }
+            "type": "string",
+            "format": "textarea"
         },
         "basic_info": {
             "title": "Basic Information",
