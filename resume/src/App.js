@@ -67,6 +67,8 @@ function MyForm() {
   const [formSubmitted, setFormSubmitted] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
   const [selectedResumeId, setSelectedResumeId] = useState("")
+  const [selectedTemplate, setSelectedTemplate] = useState("moderncv")
+  const [error, setError] = useState("")
 
   useEffect(() => {
     async function fetchData() {
@@ -89,7 +91,14 @@ function MyForm() {
 
   const handleDownloadClick = async () => {
     try {
-      const response = await downloadResume(selectedResumeId)
+      const response = await downloadResume(selectedResumeId, selectedTemplate)
+      if (!response.ok) {
+        throw new Error(response.statusText)
+      }
+      const contentType = response.headers.get("Content-Type")
+      if (!contentType || !contentType.startsWith("application/pdf")) {
+        throw new Error("The server did not send a PDF file")
+      }
       const blob = await response.blob()
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -98,17 +107,19 @@ function MyForm() {
       link.setAttribute("target", "_blank");
       link.click();
     } catch (error) {
-      console.error(error);
+      setError("Error downloading resume: " + error.message);
     }
   };
-
+  const handleCloseError = () => {
+    setError("");
+  };
 
   const getResumeById = (id) => {
     return resumes.find((resume) => resume._id === id) || {};
   };
   return (
-    <div style={{ margin: '2rem auto', maxWidth: 600 }}>
-      <select
+    <div class="panel panel-default panel-body" style={{ margin: '2rem auto', maxWidth: 900 }}>
+      <select class="form-control"
         value={selectedResumeId}
         onChange={(e) => setSelectedResumeId(e.target.value)}
       >
@@ -125,6 +136,7 @@ function MyForm() {
         formData={getResumeById(selectedResumeId)}
         uiSchema={uiSchema}
       />
+      <br></br>
       {formSubmitted ? (
         <div>
           <p>{successMessage}</p>
@@ -133,7 +145,21 @@ function MyForm() {
       ) : null}
 
       {selectedResumeId && (
-        <button class="btn btn-info undefined" onClick={handleDownloadClick}>Download</button>
+        <div class="panel panel-default panel-body">
+          <select class="form-control" value={selectedTemplate} onChange={(e) => setSelectedTemplate(e.target.value)}>
+            <option value="moderncv">ModernCV</option>
+            <option value="russel">Russel</option>
+            <option value="resume">Resume</option>
+          </select>
+          <br></br>
+          <button class="btn btn-info undefined" onClick={handleDownloadClick}>Download</button>
+
+          {error && (
+            <div className="error">
+              {error}<br></br><button class="btn btn-danger array-item-remove" title="Remove" onClick={handleCloseError}><i class="glyphicon glyphicon-remove"></i></button>
+            </div>
+          )}
+        </div>
       )}
 
     </div >
