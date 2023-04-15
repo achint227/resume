@@ -70,22 +70,26 @@ function MyForm() {
   const [selectedTemplate, setSelectedTemplate] = useState("moderncv")
   const [error, setError] = useState("")
 
+  async function fetchData() {
+    const data = await fetchResumes()
+    setResumes(data)
+    setSelectedResumeId(data[0]._id)
+  }
   useEffect(() => {
-    async function fetchData() {
-      const data = await fetchResumes()
-      setResumes(data)
-    }
     fetchData()
   }, []);
 
-  function handleSubmit(data) {
+  async function handleSubmit(data) {
     delete data.formData._id
-    createResume(data.formData)
+    const {id} = await createResume(data.formData)
+    
     setFormSubmitted(true);
-    setSuccessMessage("Form submitted successfully, Reloading the page!");
+    setSuccessMessage("Form submitted successfully!");
     setTimeout(() => {
-      window.location.reload();
-    }, 2000);
+      fetchData()
+      setSelectedResumeId(id)
+      setFormSubmitted(false)
+    }, 500);
 
   }
 
@@ -135,6 +139,7 @@ function MyForm() {
         onSubmit={handleSubmit}
         formData={getResumeById(selectedResumeId)}
         uiSchema={uiSchema}
+        onKeyPress={(event) => event.key === "Enter" && event.preventDefault()}
       />
       <br></br>
       {formSubmitted ? (
