@@ -73,7 +73,7 @@ function MyForm() {
   async function fetchData() {
     const data = await fetchResumes()
     setResumes(data)
-    setSelectedResumeId(data[0]._id)
+    setSelectedResumeId(data[data.length-1]._id)
   }
   useEffect(() => {
     fetchData()
