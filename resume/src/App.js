@@ -89,13 +89,16 @@ function MyForm() {
       fetchData()
       setSelectedResumeId(id)
       setFormSubmitted(false)
+      setError("")
     }, 500);
 
   }
 
   const handleDownloadClick = async () => {
     try {
+      setError("Waiting to download resume . . .")
       const response = await downloadResume(selectedResumeId, selectedTemplate)
+      setError("")
       if (!response.ok) {
         throw new Error(response.statusText)
       }
