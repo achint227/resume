@@ -69,11 +69,12 @@ function MyForm() {
   const [selectedResumeId, setSelectedResumeId] = useState("")
   const [selectedTemplate, setSelectedTemplate] = useState("moderncv")
   const [error, setError] = useState("")
+  const [order, setOrder] = useState('pwe');
 
   async function fetchData() {
     const data = await fetchResumes()
     setResumes(data)
-    setSelectedResumeId(data[data.length-1]._id)
+    setSelectedResumeId(data[data.length - 1]._id)
   }
   useEffect(() => {
     fetchData()
@@ -81,8 +82,8 @@ function MyForm() {
 
   async function handleSubmit(data) {
     delete data.formData._id
-    const {id} = await createResume(data.formData)
-    
+    const { id } = await createResume(data.formData)
+
     setFormSubmitted(true);
     setSuccessMessage("Form submitted successfully!");
     setTimeout(() => {
@@ -97,7 +98,7 @@ function MyForm() {
   const handleDownloadClick = async () => {
     try {
       setError("Waiting to download resume . . .")
-      const response = await downloadResume(selectedResumeId, selectedTemplate)
+      const response = await downloadResume(selectedResumeId, selectedTemplate, order)
       setError("")
       if (!response.ok) {
         throw new Error(response.statusText)
@@ -159,6 +160,14 @@ function MyForm() {
             <option value="russel">Russel</option>
             <option value="resume">Resume</option>
           </select>
+          <br></br>
+          <label htmlFor="arrangementInput">Enter Arrangement (p-projects, w-work experience, e-education):</label>
+          <input
+            type="text"
+            id="arrangementInput"
+            value={order}
+            onChange={(e) => setOrder(e.target.value)}
+          />
           <br></br>
           <button class="btn btn-info undefined" onClick={handleDownloadClick}>Download</button>
 
