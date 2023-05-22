@@ -6,7 +6,7 @@ import formSchema from './form-schema.json';
 import user from './user.json'
 import { getAllResumes, createResume, downloadResume } from './resume';
 
-
+import applyPagination from 'rjsf-tabs'
 
 async function fetchResumes() {
   try {
@@ -20,7 +20,14 @@ async function fetchResumes() {
 
 
 const uiSchema = {
+  name:{
+    "nav":"General"
+  },
+  keywords:{
+    "nav":"General"
+  },
   basic_info: {
+    "nav":"General",
     summary: {
       "ui:widget": "textarea",
       "ui:options": {
@@ -28,7 +35,11 @@ const uiSchema = {
       }
     }
   },
+  education:{
+    "nav":"Education"
+  },
   projects: {
+    "nav":"Academic Projects",
     items: {
       description: {
         items: {
@@ -41,6 +52,7 @@ const uiSchema = {
     }
   },
   experiences: {
+    "nav":"Work Experience",
     items: {
       projects: {
         items: {
@@ -59,7 +71,7 @@ const uiSchema = {
   }
 };
 
-
+let FormWithNav = applyPagination(Form)
 
 function MyForm() {
 
@@ -138,7 +150,7 @@ function MyForm() {
           </option>
         ))}
       </select>
-      <Form schema={formSchema}
+      <FormWithNav schema={formSchema}
         validator={validator}
         onSubmit={handleSubmit}
         formData={getResumeById(selectedResumeId)}
