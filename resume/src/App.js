@@ -20,14 +20,14 @@ async function fetchResumes() {
 
 
 const uiSchema = {
-  name:{
-    "nav":"General"
+  name: {
+    "nav": "General"
   },
-  keywords:{
-    "nav":"General"
+  keywords: {
+    "nav": "General"
   },
   basic_info: {
-    "nav":"General",
+    "nav": "General",
     summary: {
       "ui:widget": "textarea",
       "ui:options": {
@@ -35,11 +35,11 @@ const uiSchema = {
       }
     }
   },
-  education:{
-    "nav":"Education"
+  education: {
+    "nav": "Education"
   },
   projects: {
-    "nav":"Academic Projects",
+    "nav": "Academic Projects",
     items: {
       description: {
         items: {
@@ -52,7 +52,7 @@ const uiSchema = {
     }
   },
   experiences: {
-    "nav":"Work Experience",
+    "nav": "Work Experience",
     items: {
       projects: {
         items: {
@@ -150,13 +150,7 @@ function MyForm() {
           </option>
         ))}
       </select>
-      <FormWithNav schema={formSchema}
-        validator={validator}
-        onSubmit={handleSubmit}
-        formData={getResumeById(selectedResumeId)}
-        uiSchema={uiSchema}
-        onKeyPress={(event) => event.key === "Enter" && event.preventDefault()}
-      />
+
       <br></br>
       {formSubmitted ? (
         <div>
@@ -170,7 +164,7 @@ function MyForm() {
           <select class="form-control" value={selectedTemplate} onChange={(e) => setSelectedTemplate(e.target.value)}>
             <option value="moderncv">ModernCV</option>
             <option value="russel">Russel</option>
-            <option value="resume">Resume</option>
+            <option value="resume">Basic</option>
           </select>
           <br></br>
           <label htmlFor="arrangementInput">Enter Arrangement (p-projects, w-work experience, e-education):</label>
@@ -190,7 +184,13 @@ function MyForm() {
           )}
         </div>
       )}
-
+      <Form schema={formSchema}
+        validator={validator}
+        onSubmit={handleSubmit}
+        formData={getResumeById(selectedResumeId)}
+        uiSchema={uiSchema}
+        onKeyPress={(event) => event.key === "Enter" && event.preventDefault()}
+      />
     </div >
 
 
