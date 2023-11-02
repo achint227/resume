@@ -13,6 +13,12 @@ export async function downloadResume(id, template, order){
     return fetch(url)
 }
 
+export async function copyResume(id, template, order){
+    console.log(id,template)
+    const url = `${BASE_URL}/copy/${id}/${template}/${order}`;
+    return fetch(url)
+}
+
 export async function createResume(resumeData) {
     console.log(resumeData)
     const url = `${BASE_URL}/resume`;

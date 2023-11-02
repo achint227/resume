@@ -4,7 +4,7 @@ import Form from "@rjsf/core";
 
 import formSchema from './form-schema.json';
 import user from './user.json'
-import { getAllResumes, createResume, downloadResume } from './resume';
+import { getAllResumes, createResume, downloadResume, copyResume } from './resume';
 
 import applyPagination from 'rjsf-tabs'
 
@@ -130,6 +130,21 @@ function MyForm() {
       setError("Error downloading resume: " + error.message);
     }
   };
+  const handleCopyClick = async () => {
+    try {
+      setError("Waiting to copy resume . . .")
+      const response = await copyResume(selectedResumeId, selectedTemplate, order)
+      setError("")
+      if (!response.ok) {
+        throw new Error(response.statusText)
+      }
+      
+      const data = await response.json()
+      navigator.clipboard.writeText(data.resume)
+    } catch (error) {
+      setError("Error downloading resume: " + error.message);
+    }
+  };
   const handleCloseError = () => {
     setError("");
   };
@@ -176,6 +191,8 @@ function MyForm() {
           />
           <br></br>
           <button class="btn btn-info undefined" onClick={handleDownloadClick}>Download</button>
+          &nbsp;
+          <button class="btn btn-info undefined" onClick={handleCopyClick}>Copy tex to clipboard</button>
 
           {error && (
             <div className="error">
