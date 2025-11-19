@@ -9,8 +9,10 @@
         },
         "keywords": {
             "title": "Keywords",
-            "type": "string",
-            "format": "textarea"
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
         },
         "basic_info": {
             "title": "Basic Information",
@@ -87,7 +89,6 @@
                         "type": "array",
                         "title": "Additional Information",
                         "items": {
-                            "title": " ",
                             "type": "string"
                         }
                     }
@@ -117,7 +118,6 @@
                         "title": "Information",
                         "type": "array",
                         "items": {
-                            "title": " ",
                             "type": "string",
                             "format": "textarea"
                         }
@@ -126,7 +126,6 @@
                         "title": "Tools",
                         "type": "array",
                         "items": {
-                            "title": " ",
                             "type": "string"
                         }
                     }
@@ -140,10 +139,6 @@
             "type": "array",
             "title": "Experience",
             "items": {
-                "required": [
-                    "company",
-                    "title"
-                ],
                 "title": " ",
                 "type": "object",
                 "properties": {
@@ -178,7 +173,6 @@
                                     "title": "Information",
                                     "type": "array",
                                     "items": {
-                                        "title": " ",
                                         "type": "string",
                                         "format": "textarea"
                                     }
@@ -187,14 +181,10 @@
                                     "title": "Tools",
                                     "type": "array",
                                     "items": {
-                                        "title": " ",
                                         "type": "string"
                                     }
                                 }
-                            },
-                            "required": [
-                                "title"
-                            ]
+                            }
                         }
                     }
                 }
