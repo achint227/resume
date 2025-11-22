@@ -104,6 +104,17 @@ const uiSchema = {
 
 let FormWithNav = applyPagination(Form)
 
+// Custom submit button
+function SubmitButton(props) {
+  return (
+    <div>
+      <button type="submit" className="btn btn-info">
+        Save Resume
+      </button>
+    </div>
+  );
+}
+
 // Wrapper for tags field
 function TagsFieldWrapper(props) {
   // Don't show label if it's already shown by the form (like for keywords at top level)
@@ -369,6 +380,8 @@ function MyForm() {
   const [isEditing, setIsEditing] = useState(false);
   const [keywords, setKeywords] = useState([]);
   const [toasts, setToasts] = useState([]);
+  const [newResumeName, setNewResumeName] = useState('');
+  const [saveAsNew, setSaveAsNew] = useState(false);
 
   const showToast = (message, isError = false) => {
     const id = Date.now();
@@ -391,18 +404,33 @@ function MyForm() {
       delete data.formData._id
       // Add keywords to the form data
       data.formData.keywords = keywords;
+      // Add resume name for new resumes or save as new
+      if (!selectedResumeId && newResumeName) {
+        data.formData.name = newResumeName;
+      } else if (saveAsNew && newResumeName) {
+        data.formData.name = newResumeName;
+      }
       const { id } = await createResume(data.formData)
 
-      showToast("Form submitted successfully!");
+      showToast("Resume saved successfully!");
       setTimeout(() => {
         fetchData()
         setSelectedResumeId(id)
+        setNewResumeName('');
+        setSaveAsNew(false);
       }, 500);
     } catch (error) {
       showToast("Failed to save resume", true);
       console.error("Submit error:", error);
     }
   }
+
+  const handleSaveAsNew = () => {
+    if (newResumeName.trim()) {
+      // Trigger form submission
+      document.querySelector('form').dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    }
+  };
 
   const handleDownloadClick = async () => {
     try {
@@ -484,6 +512,19 @@ function MyForm() {
     setIsEditing(false);
   };
 
+  const handleCreateNewClick = () => {
+    setSelectedResumeId("");
+    setKeywords([]);
+    setNewResumeName('');
+    setSectionOrder([
+      { key: 'p', label: 'Projects' },
+      { key: 'w', label: 'Work Experience' },
+      { key: 'e', label: 'Education' }
+    ]);
+    setOrder('pwe');
+    setIsEditing(true);
+  };
+
   // Selection Page
   if (!isEditing) {
     return (
@@ -491,21 +532,44 @@ function MyForm() {
         <h2>Select a Resume</h2>
         <select class="form-control"
           value={selectedResumeId}
-          onChange={(e) => setSelectedResumeId(e.target.value)}
+          onChange={(e) => {
+            const resumeId = e.target.value;
+            if (resumeId) {
+              setSelectedResumeId(resumeId);
+              const resume = resumes.find(r => r._id === resumeId);
+              if (resume) {
+                setKeywords(resume.keywords || []);
+                const orderMap = { p: 'Projects', w: 'Work Experience', e: 'Education' };
+                const parsed = order.split('').map(key => ({ 
+                  key, 
+                  label: orderMap[key] || key 
+                }));
+                setSectionOrder(parsed);
+                setIsEditing(true);
+              }
+            } else {
+              setSelectedResumeId('');
+            }
+          }}
         >
           <option value="">Select a resume</option>
           {resumes.map((resume) => (
             <option key={resume._id} value={resume._id}>
-              {`${resume.name} - ${resume._id}`}
+              {resume.name}
             </option>
           ))}
         </select>
         <br></br>
-        {selectedResumeId && (
-          <button class="btn btn-primary" onClick={handleEditClick}>
-            Edit Resume
+        <div style={{ display: 'flex', gap: '10px' }}>
+          {selectedResumeId && (
+            <button class="btn btn-primary" onClick={handleEditClick}>
+              Edit Resume
+            </button>
+          )}
+          <button class="btn btn-success" onClick={handleCreateNewClick}>
+            Create New Resume
           </button>
-        )}
+        </div>
       </div>
     );
   }
@@ -516,60 +580,76 @@ function MyForm() {
       <button class="btn btn-default" onClick={handleBackClick}>
         ← Back to Selection
       </button>
-      <h3>{getResumeById(selectedResumeId).name}</h3>
+      <h3>{selectedResumeId ? getResumeById(selectedResumeId).name : 'New Resume'}</h3>
       
-      <div class="panel panel-default panel-body">
-        <h4>Template Selection</h4>
-        <label htmlFor="templateSelect">Template:</label>
-        <select id="templateSelect" class="form-control" value={selectedTemplate} onChange={(e) => setSelectedTemplate(e.target.value)}>
-          <option value="moderncv">ModernCV</option>
-          <option value="russel">Russel</option>
-          <option value="resume">Basic</option>
-        </select>
-        <br></br>
-        <label>Section Order:</label>
-        <div style={{ marginTop: '10px', marginBottom: '15px' }}>
-          {sectionOrder.map((section, index) => (
-            <div 
-              key={section.key}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                padding: '8px 12px',
-                marginBottom: '5px',
-                backgroundColor: '#f5f5f5',
-                borderRadius: '4px',
-                border: '1px solid #ddd'
-              }}
-            >
-              <span style={{ flex: 1, fontWeight: '500' }}>
-                {index + 1}. {section.label}
-              </span>
-              <div style={{ display: 'flex', gap: '5px' }}>
-                <button
-                  className="btn btn-default btn-xs"
-                  onClick={() => moveSectionUp(index)}
-                  disabled={index === 0}
-                  style={{ opacity: index === 0 ? 0.5 : 1 }}
-                >
-                  ↑
-                </button>
-                <button
-                  className="btn btn-default btn-xs"
-                  onClick={() => moveSectionDown(index)}
-                  disabled={index === sectionOrder.length - 1}
-                  style={{ opacity: index === sectionOrder.length - 1 ? 0.5 : 1 }}
-                >
-                  ↓
-                </button>
-              </div>
-            </div>
-          ))}
+      {!selectedResumeId && (
+        <div class="panel panel-default panel-body" style={{ marginTop: '15px' }}>
+          <h4>Resume Name</h4>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Enter resume name (e.g., Software Engineer Resume)"
+            value={newResumeName}
+            onChange={(e) => setNewResumeName(e.target.value)}
+            required
+          />
         </div>
-        <button class="btn btn-info undefined" onClick={handleDownloadClick}>Download</button>
-        &nbsp;
-        <button class="btn btn-info undefined" onClick={handleCopyClick}>Copy tex to clipboard</button>
-      </div>
+      )}
+
+      {selectedResumeId && (
+        <div class="panel panel-default panel-body">
+          <h4>Template Selection</h4>
+          <label htmlFor="templateSelect">Template:</label>
+          <select id="templateSelect" class="form-control" value={selectedTemplate} onChange={(e) => setSelectedTemplate(e.target.value)}>
+            <option value="moderncv">ModernCV</option>
+            <option value="russel">Russel</option>
+            <option value="resume">Basic</option>
+          </select>
+          <br></br>
+          <label>Section Order:</label>
+          <div style={{ marginTop: '10px', marginBottom: '15px' }}>
+            {sectionOrder.map((section, index) => (
+              <div 
+                key={section.key}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '8px 12px',
+                  marginBottom: '5px',
+                  backgroundColor: '#f5f5f5',
+                  borderRadius: '4px',
+                  border: '1px solid #ddd'
+                }}
+              >
+                <span style={{ flex: 1, fontWeight: '500' }}>
+                  {index + 1}. {section.label}
+                </span>
+                <div style={{ display: 'flex', gap: '5px' }}>
+                  <button
+                    className="btn btn-default btn-xs"
+                    onClick={() => moveSectionUp(index)}
+                    disabled={index === 0}
+                    style={{ opacity: index === 0 ? 0.5 : 1 }}
+                  >
+                    ↑
+                  </button>
+                  <button
+                    className="btn btn-default btn-xs"
+                    onClick={() => moveSectionDown(index)}
+                    disabled={index === sectionOrder.length - 1}
+                    style={{ opacity: index === sectionOrder.length - 1 ? 0.5 : 1 }}
+                  >
+                    ↓
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <button class="btn btn-info undefined" onClick={handleDownloadClick}>Download</button>
+          &nbsp;
+          <button class="btn btn-info undefined" onClick={handleCopyClick}>Copy tex to clipboard</button>
+        </div>
+      )}
 
       <div class="panel panel-default panel-body" style={{ marginTop: '15px' }}>
         <h4>Keywords</h4>
@@ -583,12 +663,45 @@ function MyForm() {
         schema={formSchema}
         validator={validator}
         onSubmit={handleSubmit}
-        formData={getResumeById(selectedResumeId)}
+        formData={selectedResumeId ? getResumeById(selectedResumeId) : {}}
         uiSchema={uiSchema}
-        templates={{ ArrayFieldTemplate: CollapsibleArrayFieldTemplate }}
+        templates={{ ArrayFieldTemplate: CollapsibleArrayFieldTemplate, ButtonTemplates: { SubmitButton } }}
         fields={{ tagsField: TagsFieldWrapper, hiddenLabelArray: HiddenLabelArrayField }}
         onKeyPress={(event) => event.key === "Enter" && event.preventDefault()}
       />
+
+      {selectedResumeId && (
+        <div style={{ marginTop: '15px' }}>
+          {!saveAsNew ? (
+            <button class="btn btn-warning" onClick={() => setSaveAsNew(true)}>
+              Save as New Resume
+            </button>
+          ) : (
+            <div class="panel panel-default panel-body">
+              <h4>Save as New Resume</h4>
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Enter new resume name"
+                value={newResumeName}
+                onChange={(e) => setNewResumeName(e.target.value)}
+                style={{ marginBottom: '10px' }}
+              />
+              <button 
+                class="btn btn-success" 
+                onClick={handleSaveAsNew}
+                disabled={!newResumeName.trim()}
+              >
+                Confirm Save as New
+              </button>
+              &nbsp;
+              <button class="btn btn-default" onClick={() => { setSaveAsNew(false); setNewResumeName(''); }}>
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
+      )}
       
       <div style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999 }}>
         {toasts.map((toast, index) => (
