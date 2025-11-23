@@ -11,3 +11,16 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Fix cursor for all navigation elements globally */
+a[role="tab"],
+a[role="tab"] *,
+button[role="tab"],
+button[role="tab"] *,
+[class*="nav"] a,
+[class*="nav"] a *,
+[class*="nav"] button,
+[class*="nav"] button * {
+  cursor: pointer !important;
+  user-select: none !important;
+}

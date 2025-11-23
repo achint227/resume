@@ -32,3 +32,24 @@ export async function createResume(resumeData) {
     const data = await response.json();
     return data;
 }
+
+export async function updateResume(id, resumeData) {
+    console.log(id, resumeData)
+    const url = `${BASE_URL}/resume/${id}`;
+    const response = await fetch(url, {
+        method: 'PUT',
+        body: JSON.stringify(resumeData),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    const data = await response.json();
+    return data;
+}
+
+export async function getTemplates() {
+    const url = `${BASE_URL}/templates`;
+    const response = await fetch(url, { mode: 'cors' });
+    const data = await response.json();
+    return data;
+}

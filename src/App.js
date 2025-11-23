@@ -4,7 +4,7 @@ import Form from "@rjsf/core";
 
 import formSchema from './form-schema.json';
 import user from './user.json'
-import { getAllResumes, createResume, downloadResume, copyResume } from './resume';
+import { getAllResumes, createResume, updateResume, downloadResume, copyResume, getTemplates } from './resume';
 
 import applyPagination from 'rjsf-tabs'
 
@@ -369,8 +369,9 @@ function CollapsibleArrayFieldTemplate(props) {
 function MyForm() {
 
   const [resumes, setResumes] = useState([]);
+  const [templates, setTemplates] = useState([]);
   const [selectedResumeId, setSelectedResumeId] = useState("")
-  const [selectedTemplate, setSelectedTemplate] = useState("moderncv")
+  const [selectedTemplate, setSelectedTemplate] = useState("")
   const [order, setOrder] = useState('pwe');
   const [sectionOrder, setSectionOrder] = useState([
     { key: 'p', label: 'Projects' },
@@ -380,7 +381,7 @@ function MyForm() {
   const [isEditing, setIsEditing] = useState(false);
   const [keywords, setKeywords] = useState([]);
   const [toasts, setToasts] = useState([]);
-  const [newResumeName, setNewResumeName] = useState('');
+  const [resumeName, setResumeName] = useState('');
   const [saveAsNew, setSaveAsNew] = useState(false);
 
   const showToast = (message, isError = false) => {
@@ -395,28 +396,58 @@ function MyForm() {
     const data = await fetchResumes()
     setResumes(data)
   }
+
+  async function fetchTemplateData() {
+    try {
+      const response = await getTemplates()
+      const data = response.templates || response
+      setTemplates(data)
+      if (data.length > 0 && !selectedTemplate) {
+        setSelectedTemplate(data[0].id || data[0].value || data[0])
+      }
+    } catch (error) {
+      console.error("Failed to fetch templates:", error);
+      // Fallback to hardcoded templates
+      setTemplates([
+        { id: "moderncv", name: "Modern CV" },
+        { id: "russel", name: "Russell" },
+        { id: "resume", name: "Resume" }
+      ]);
+      setSelectedTemplate("moderncv");
+    }
+  }
+
   useEffect(() => {
     fetchData()
+    fetchTemplateData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleSubmit(data) {
     try {
-      delete data.formData._id
-      // Add keywords to the form data
+      // Add keywords and name to the form data
       data.formData.keywords = keywords;
-      // Add resume name for new resumes or save as new
-      if (!selectedResumeId && newResumeName) {
-        data.formData.name = newResumeName;
-      } else if (saveAsNew && newResumeName) {
-        data.formData.name = newResumeName;
+      data.formData.name = resumeName;
+      
+      let resultId;
+      
+      if (!selectedResumeId || saveAsNew) {
+        // Creating new resume
+        delete data.formData._id;
+        const result = await createResume(data.formData);
+        resultId = result.id;
+      } else {
+        // Updating existing resume
+        const resumeId = data.formData._id;
+        delete data.formData._id;
+        await updateResume(resumeId, data.formData);
+        resultId = resumeId;
       }
-      const { id } = await createResume(data.formData)
 
       showToast("Resume saved successfully!");
       setTimeout(() => {
         fetchData()
-        setSelectedResumeId(id)
-        setNewResumeName('');
+        setSelectedResumeId(resultId)
         setSaveAsNew(false);
       }, 500);
     } catch (error) {
@@ -426,7 +457,7 @@ function MyForm() {
   }
 
   const handleSaveAsNew = () => {
-    if (newResumeName.trim()) {
+    if (resumeName.trim()) {
       // Trigger form submission
       document.querySelector('form').dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
     }
@@ -477,21 +508,6 @@ function MyForm() {
     return resumes.find((resume) => resume._id === id) || {};
   };
 
-  const handleEditClick = () => {
-    if (selectedResumeId) {
-      const resume = getResumeById(selectedResumeId);
-      setKeywords(resume.keywords || []);
-      // Parse order string to section order
-      const orderMap = { p: 'Projects', w: 'Work Experience', e: 'Education' };
-      const parsed = order.split('').map(key => ({ 
-        key, 
-        label: orderMap[key] || key 
-      }));
-      setSectionOrder(parsed);
-      setIsEditing(true);
-    }
-  };
-
   const moveSectionUp = (index) => {
     if (index === 0) return;
     const newOrder = [...sectionOrder];
@@ -508,14 +524,10 @@ function MyForm() {
     setOrder(newOrder.map(s => s.key).join(''));
   };
 
-  const handleBackClick = () => {
-    setIsEditing(false);
-  };
-
   const handleCreateNewClick = () => {
     setSelectedResumeId("");
     setKeywords([]);
-    setNewResumeName('');
+    setResumeName('');
     setSectionOrder([
       { key: 'p', label: 'Projects' },
       { key: 'w', label: 'Work Experience' },
@@ -530,6 +542,11 @@ function MyForm() {
     return (
       <div class="panel panel-default panel-body" style={{ margin: '2rem auto', maxWidth: 900 }}>
         <h2>Select a Resume</h2>
+        <button class="btn btn-success btn-lg btn-block" onClick={handleCreateNewClick}>
+          Create New Resume
+        </button>
+        <br></br>
+        <p style={{ textAlign: 'center', color: '#666' }}>or select an existing resume to edit</p>
         <select class="form-control"
           value={selectedResumeId}
           onChange={(e) => {
@@ -539,6 +556,7 @@ function MyForm() {
               const resume = resumes.find(r => r._id === resumeId);
               if (resume) {
                 setKeywords(resume.keywords || []);
+                setResumeName(resume.name || '');
                 const orderMap = { p: 'Projects', w: 'Work Experience', e: 'Education' };
                 const parsed = order.split('').map(key => ({ 
                   key, 
@@ -547,8 +565,6 @@ function MyForm() {
                 setSectionOrder(parsed);
                 setIsEditing(true);
               }
-            } else {
-              setSelectedResumeId('');
             }
           }}
         >
@@ -559,17 +575,6 @@ function MyForm() {
             </option>
           ))}
         </select>
-        <br></br>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          {selectedResumeId && (
-            <button class="btn btn-primary" onClick={handleEditClick}>
-              Edit Resume
-            </button>
-          )}
-          <button class="btn btn-success" onClick={handleCreateNewClick}>
-            Create New Resume
-          </button>
-        </div>
       </div>
     );
   }
@@ -577,33 +582,70 @@ function MyForm() {
   // Editing Page
   return (
     <div class="panel panel-default panel-body" style={{ margin: '2rem auto', maxWidth: 900 }}>
-      <button class="btn btn-default" onClick={handleBackClick}>
-        ← Back to Selection
-      </button>
-      <h3>{selectedResumeId ? getResumeById(selectedResumeId).name : 'New Resume'}</h3>
+      <div class="panel panel-default panel-body">
+        <h4>Resume Selection</h4>
+        <select class="form-control"
+          value={selectedResumeId}
+          onChange={(e) => {
+            const resumeId = e.target.value;
+            if (resumeId) {
+              setSelectedResumeId(resumeId);
+              const resume = resumes.find(r => r._id === resumeId);
+              if (resume) {
+                setKeywords(resume.keywords || []);
+                setResumeName(resume.name || '');
+                const orderMap = { p: 'Projects', w: 'Work Experience', e: 'Education' };
+                const parsed = order.split('').map(key => ({ 
+                  key, 
+                  label: orderMap[key] || key 
+                }));
+                setSectionOrder(parsed);
+                setSaveAsNew(false);
+              }
+            } else {
+              setSelectedResumeId('');
+              setKeywords([]);
+              setResumeName('');
+              setSectionOrder([
+                { key: 'p', label: 'Projects' },
+                { key: 'w', label: 'Work Experience' },
+                { key: 'e', label: 'Education' }
+              ]);
+              setOrder('pwe');
+            }
+          }}
+        >
+          <option value="">Create New Resume</option>
+          {resumes.map((resume) => (
+            <option key={resume._id} value={resume._id}>
+              {resume.name}
+            </option>
+          ))}
+        </select>
+      </div>
       
-      {!selectedResumeId && (
-        <div class="panel panel-default panel-body" style={{ marginTop: '15px' }}>
-          <h4>Resume Name</h4>
-          <input
-            type="text"
-            class="form-control"
-            placeholder="Enter resume name (e.g., Software Engineer Resume)"
-            value={newResumeName}
-            onChange={(e) => setNewResumeName(e.target.value)}
-            required
-          />
-        </div>
-      )}
+      <div class="panel panel-default panel-body" style={{ marginTop: '15px' }}>
+        <h4>Resume Name</h4>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Enter resume name (e.g., Software Engineer Resume)"
+          value={resumeName}
+          onChange={(e) => setResumeName(e.target.value)}
+          required
+        />
+      </div>
 
       {selectedResumeId && (
         <div class="panel panel-default panel-body">
           <h4>Template Selection</h4>
           <label htmlFor="templateSelect">Template:</label>
           <select id="templateSelect" class="form-control" value={selectedTemplate} onChange={(e) => setSelectedTemplate(e.target.value)}>
-            <option value="moderncv">ModernCV</option>
-            <option value="russel">Russel</option>
-            <option value="resume">Basic</option>
+            {templates.map((template) => (
+              <option key={template.id || template.value || template} value={template.id || template.value || template}>
+                {template.name || template.label || template}
+              </option>
+            ))}
           </select>
           <br></br>
           <label>Section Order:</label>
@@ -679,23 +721,18 @@ function MyForm() {
           ) : (
             <div class="panel panel-default panel-body">
               <h4>Save as New Resume</h4>
-              <input
-                type="text"
-                class="form-control"
-                placeholder="Enter new resume name"
-                value={newResumeName}
-                onChange={(e) => setNewResumeName(e.target.value)}
-                style={{ marginBottom: '10px' }}
-              />
+              <p style={{ color: '#666' }}>
+                This will create a copy of the current resume with the name you've entered above.
+              </p>
               <button 
                 class="btn btn-success" 
                 onClick={handleSaveAsNew}
-                disabled={!newResumeName.trim()}
+                disabled={!resumeName.trim()}
               >
                 Confirm Save as New
               </button>
               &nbsp;
-              <button class="btn btn-default" onClick={() => { setSaveAsNew(false); setNewResumeName(''); }}>
+              <button class="btn btn-default" onClick={() => setSaveAsNew(false)}>
                 Cancel
               </button>
             </div>
