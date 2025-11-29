@@ -8,6 +8,9 @@
 
 # vscode
 /.vscode
+
+# kiro
+/.kiro
 # testing
 /coverage
 
