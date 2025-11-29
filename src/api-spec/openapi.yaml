@@ -1,0 +1,563 @@
+openapi: 3.0.3
+info:
+  title: Resume Builder API
+  description: Backend API for the Resume Builder application
+  version: 1.0.0
+
+servers:
+  - url: '{baseUrl}'
+    description: API server
+    variables:
+      baseUrl:
+        default: http://localhost:3001
+        description: Base URL from REACT_APP_API_BASE_URL environment variable
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Checks if the server is running and responsive
+      operationId: checkHealth
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+        '503':
+          description: Server is unavailable
+
+  /resume:
+    get:
+      summary: Get all resumes
+      description: Retrieves a list of all resumes
+      operationId: getAllResumes
+      responses:
+        '200':
+          description: List of resumes retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Resume'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+    post:
+      summary: Create a new resume
+      description: Creates a new resume with the provided data
+      operationId: createResume
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResumeCreateInput'
+      responses:
+        '201':
+          description: Resume created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateResumeResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /resume/{id}:
+    get:
+      summary: Get a resume by ID
+      description: Retrieves a specific resume by its ID
+      operationId: getResumeById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier of the resume
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Resume retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resume'
+        '404':
+          description: Resume not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+    put:
+      summary: Update a resume
+      description: Updates an existing resume with the provided data
+      operationId: updateResume
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier of the resume
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResumeUpdateInput'
+      responses:
+        '200':
+          description: Resume updated successfully
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Resume not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /download/{id}/{template}/{order}:
+    get:
+      summary: Download resume as PDF
+      description: Downloads a resume as a PDF file using the specified template and section order
+      operationId: downloadResume
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier of the resume
+          schema:
+            type: string
+        - name: template
+          in: path
+          required: true
+          description: The template ID to use for rendering
+          schema:
+            type: string
+        - name: order
+          in: path
+          required: true
+          description: The section order configuration (e.g., "pwe", "wpe", "ewp")
+          schema:
+            type: string
+      responses:
+        '200':
+          description: PDF file downloaded successfully
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Resume or template not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /copy/{id}/{template}/{order}:
+    get:
+      summary: Copy resume as LaTeX
+      description: Returns the resume as LaTeX source code using the specified template and section order
+      operationId: copyResume
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier of the resume
+          schema:
+            type: string
+        - name: template
+          in: path
+          required: true
+          description: The template ID to use for rendering
+          schema:
+            type: string
+        - name: order
+          in: path
+          required: true
+          description: The section order configuration (e.g., "pwe", "wpe", "ewp")
+          schema:
+            type: string
+      responses:
+        '200':
+          description: LaTeX source returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CopyResumeResponse'
+        '404':
+          description: Resume or template not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /templates:
+    get:
+      summary: Get available templates
+      description: Retrieves a list of all available resume templates
+      operationId: getTemplates
+      responses:
+        '200':
+          description: Templates retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplatesResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+
+components:
+  schemas:
+    BasicInfo:
+      type: object
+      description: Basic personal information for a resume
+      required:
+        - name
+        - address
+        - email
+        - phone
+        - linkedin
+        - github
+      properties:
+        name:
+          type: string
+          description: Full name
+        address:
+          type: string
+          description: Physical address
+        email:
+          type: string
+          format: email
+          description: Email address
+        phone:
+          type: number
+          description: Phone number
+        linkedin:
+          type: string
+          description: LinkedIn profile URL
+        github:
+          type: string
+          description: GitHub profile URL
+        homepage:
+          type: string
+          description: Personal website URL
+        summary:
+          type: string
+          description: Professional summary
+
+    Education:
+      type: object
+      description: Education entry in a resume
+      required:
+        - university
+        - degree
+      properties:
+        university:
+          type: string
+          description: Name of the educational institution
+        duration:
+          type: string
+          description: Time period of attendance
+        location:
+          type: string
+          description: Location of the institution
+        degree:
+          type: string
+          description: Degree or certification obtained
+        info:
+          type: array
+          items:
+            type: string
+          description: Additional information about the education
+
+    Project:
+      type: object
+      description: Academic or personal project entry
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          description: Project title
+        repo:
+          type: string
+          description: Repository URL
+        description:
+          type: array
+          items:
+            type: string
+          description: Project description points
+        tools:
+          type: array
+          items:
+            type: string
+          description: Technologies and tools used
+
+    ExperienceProject:
+      type: object
+      description: Project within a work experience entry
+      properties:
+        title:
+          type: string
+          description: Project title
+        details:
+          type: array
+          items:
+            type: string
+          description: Project details and accomplishments
+        tools:
+          type: array
+          items:
+            type: string
+          description: Technologies and tools used
+
+    Experience:
+      type: object
+      description: Work experience entry
+      properties:
+        company:
+          type: string
+          description: Company name
+        duration:
+          type: string
+          description: Time period of employment
+        location:
+          type: string
+          description: Work location
+        title:
+          type: string
+          description: Job title
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExperienceProject'
+          description: Projects worked on during this experience
+
+    Resume:
+      type: object
+      description: Complete resume data structure
+      required:
+        - _id
+        - name
+      properties:
+        _id:
+          type: string
+          description: Unique identifier for the resume
+        name:
+          type: string
+          description: Name/title of the resume
+        keywords:
+          type: array
+          items:
+            type: string
+          description: Keywords associated with the resume
+        basic_info:
+          $ref: '#/components/schemas/BasicInfo'
+        education:
+          type: array
+          items:
+            $ref: '#/components/schemas/Education'
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+        experiences:
+          type: array
+          items:
+            $ref: '#/components/schemas/Experience'
+
+    ResumeCreateInput:
+      type: object
+      description: Input type for creating a new resume (without _id)
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Name/title of the resume
+        keywords:
+          type: array
+          items:
+            type: string
+          description: Keywords associated with the resume
+        basic_info:
+          $ref: '#/components/schemas/BasicInfo'
+        education:
+          type: array
+          items:
+            $ref: '#/components/schemas/Education'
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+        experiences:
+          type: array
+          items:
+            $ref: '#/components/schemas/Experience'
+
+    ResumeUpdateInput:
+      type: object
+      description: Input type for updating an existing resume (without _id)
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Name/title of the resume
+        keywords:
+          type: array
+          items:
+            type: string
+          description: Keywords associated with the resume
+        basic_info:
+          $ref: '#/components/schemas/BasicInfo'
+        education:
+          type: array
+          items:
+            $ref: '#/components/schemas/Education'
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+        experiences:
+          type: array
+          items:
+            $ref: '#/components/schemas/Experience'
+
+    Template:
+      type: object
+      description: Resume template definition
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the template
+        name:
+          type: string
+          description: Display name of the template
+
+    SectionOrder:
+      type: object
+      description: Section ordering configuration for resume layout
+      required:
+        - key
+        - label
+      properties:
+        key:
+          type: string
+          description: Section key identifier
+        label:
+          type: string
+          description: Display label for the section
+
+    TemplatesResponse:
+      type: object
+      description: Response from GET /templates endpoint
+      required:
+        - templates
+      properties:
+        templates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Template'
+
+    CreateResumeResponse:
+      type: object
+      description: Response from POST /resume endpoint
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          description: ID of the newly created resume
+
+    CopyResumeResponse:
+      type: object
+      description: Response from GET /copy endpoint
+      required:
+        - resume
+      properties:
+        resume:
+          type: string
+          description: LaTeX source code of the resume
+
+    ApiError:
+      type: object
+      description: Standardized API error structure
+      required:
+        - type
+        - message
+      properties:
+        type:
+          type: string
+          enum:
+            - network
+            - validation
+            - server
+            - unknown
+          description: Error type category
+        message:
+          type: string
+          description: Human-readable error message
+        statusCode:
+          type: integer
+          description: HTTP status code if applicable

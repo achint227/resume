@@ -33,7 +33,7 @@
                 },
                 "phone": {
                     "title": "Phone",
-                    "type": "integer"
+                    "type": "string"
                 },
                 "linkedin": {
                     "title": "LinkedIn",
